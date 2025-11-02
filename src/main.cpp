@@ -9,7 +9,7 @@
 const int steps = 100;  // Number of Steps to create a cirle
 const float pi = 3.1415926; // PIEEE
 const float angle = 2.0f*pi/steps; // 2*pi(360 Degree) divided by Steps {Angle of a triagle that makes a circle}
-
+const float G = 0.0001; // Universal Gravitational Constant (G)
 
 class Planet {   // Planet Class 
     public:
@@ -45,12 +45,73 @@ class Planet {   // Planet Class
             }
             glEnd();
         }
+
+        void updatePos(float dt) {
+            posX += velX*dt;      // Velocity = Distance/Time
+            posY += velY*dt;      // Distance = Velocity*change in time (dt)
+        }
+
+        void applyForces(float fX, float fY, float dt) {// get force on x and y direction and change in time
+            // f=ma; a=f/m
+            float accX = fX/mass;
+            float accY = fY/mass;
+
+            velX += accX*dt;   // Changeing the Velocity with time under the act of some force which produced acceleration
+            velY += accY*dt;
+
+        } 
+
+
 };
 
 std::vector<Planet> planets;
 
  
 
+
+void calculateGravitationalForces() {
+    
+
+    for (int i = 0; i < planets.size(); i++) {
+        for (int j = i + 1; j < planets.size(); j++) {
+            Planet& p1 = planets[i];
+            Planet& p2 = planets[j];
+
+
+
+            // from the distance formula distanceSquared = (x2-x1) + (y2-y1)
+            //    dsquared = (x2-x1) + (y2-y1)
+            //    dx = x2 - x1
+            //    dy = y2 - y1
+            float dx = p2.posX - p1.posX;
+            float dy = p2.posY - p1.posY;
+            float distanceSquared = dx*dx + dy*dy; // Just the formula now
+
+            if (distanceSquared < 0.0001f) distanceSquared = 0.0001f;
+
+            float distance = std::sqrt(distanceSquared); 
+
+            // This is the formuala for Gravitational Force between two bodies
+            // with mass M1 and M2 having D distance between their center.
+            // 
+            //  F = (G*M1*M2)/(D^2)
+
+            float Force = G * p1.mass * p2.mass / distanceSquared;
+
+            // Components of force of X and Y component
+
+            float forceX = Force * dx / distance;
+            float forceY = Force* dy / distance;
+
+
+            p1.applyForces(forceX, forceY, 0.01f);
+            p2.applyForces(-forceX, -forceY, 0.01f);
+
+
+
+        }
+    }
+}
 
 
 
@@ -79,8 +140,8 @@ int main() {
     glfwMakeContextCurrent(window);
 
 
-    planets.push_back(Planet(0.0f, 0.0f, 0.0f, 0.0f, 100.0f, 0.2f, 1.0f, 0.0f, 0.0f));  // Central star
-    planets.push_back(Planet(0.8f, 0.0f, 0.0f, 0.5f, 1.0f, 0.08f, 0.0f, 1.0f, 0.0f));   // Orbiting planet
+    planets.push_back(Planet(0.0f, 0.0f, 0.0f, 0.0f, 10000.0f, 0.1f, 1.0f, 0.0f, 0.0f));  // Central star
+    planets.push_back(Planet(0.8f, 0.0f, 0.0f, 0.5f, 100.0f, 0.08f, 0.0f, 1.0f, 0.0f));   // Orbiting planet
     planets.push_back(Planet(-0.5f, 0.0f, 0.0f, -0.7f, 0.5f, 0.06f, 0.0f, 0.0f, 1.0f)); // Another planet
 
 
@@ -90,7 +151,11 @@ int main() {
         glClearColor(0.259f, 0.529f, 0.961f, 1.0f);  // Screen Color
         glClear(GL_COLOR_BUFFER_BIT);
 
+        calculateGravitationalForces();
+
+
         for (auto& planet : planets) {
+            planet.updatePos(0.01f);
             planet.drawPlanet();
         }
 
