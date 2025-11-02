@@ -3,33 +3,53 @@
 #include <cmath>
 #include <iostream>
 #include <math.h>
+#include <vector>
 
 
 const int steps = 100;  // Number of Steps to create a cirle
 const float pi = 3.1415926; // PIEEE
 const float angle = 2.0f*pi/steps; // 2*pi(360 Degree) divided by Steps {Angle of a triagle that makes a circle}
 
-float cameraX = 0.0f;
-float cameraY = 0.0f;
-float cameraZ = 3.0f;
+
+class Planet {   // Planet Class 
+    public:
+        float posX, posY;  // Position of the Center of the Planet
+        float velX, velY;  // Velocity of the planet
+        float mass;        // Mass of the Planet
+        float radius;      // Radius of the Planet
+        float color[3];    // Color of the Planet
+
+        Planet (float x, float y, float vx, float vy, float m, float r, float colorRed, float colorGreen, float colorBlue) {
+            posX = x;
+            posY = y;
+            velX = vx;
+            velY = vy;
+            mass = m;
+            radius = r;
+            color[0] = colorRed;
+            color[1] = colorGreen;
+            color[2] = colorBlue;
+        }
+
+        void drawPlanet() {   // This thing makes a circle
+            glBegin(GL_TRIANGLES);
+            glColor3f(color[0], color[1], color[2]);
+
+            for (int i =0; i< steps; i++) {
+                float theta = i*angle;
+                float beta = (i+1)*angle;
+
+                glVertex2f( posX, posY);
+                glVertex2f(posX + radius*cos(theta), posY + radius*sin(theta));
+                glVertex2f(posX + radius*cos(beta), posY + radius*sin(beta));
+            }
+            glEnd();
+        }
+};
+
+std::vector<Planet> planets;
+
  
-
-// This function makes a circle
-void makeCircle(float CENTER_X, float CENTER_Y, float radius) {  
-    glBegin(GL_TRIANGLES);
-    glColor3f(1.0f, 1.0f, 0.0f);
-
-    for (int i =0; i < steps; i++) {
-        float theta = i*angle;
-        float beta = (i+1)*angle;
-
-        glVertex2f(CENTER_X + radius*cos(theta), CENTER_Y + radius*sin(theta));
-        glVertex2f(CENTER_X + radius*cos(beta), CENTER_Y + radius*sin(beta));
-        glVertex2f(CENTER_X, CENTER_Y);
-    }
-
-    glEnd();
-}
 
 
 
@@ -58,13 +78,22 @@ int main() {
 
     glfwMakeContextCurrent(window);
 
+
+    planets.push_back(Planet(0.0f, 0.0f, 0.0f, 0.0f, 100.0f, 0.2f, 1.0f, 0.0f, 0.0f));  // Central star
+    planets.push_back(Planet(0.8f, 0.0f, 0.0f, 0.5f, 1.0f, 0.08f, 0.0f, 1.0f, 0.0f));   // Orbiting planet
+    planets.push_back(Planet(-0.5f, 0.0f, 0.0f, -0.7f, 0.5f, 0.06f, 0.0f, 0.0f, 1.0f)); // Another planet
+
+
     
     while (!glfwWindowShouldClose(window)) {
         
         glClearColor(0.259f, 0.529f, 0.961f, 1.0f);  // Screen Color
         glClear(GL_COLOR_BUFFER_BIT);
 
-        makeCircle(0.0f, 0.0f, 0.1f);
+        for (auto& planet : planets) {
+            planet.drawPlanet();
+        }
+
         
         glfwSwapBuffers(window);        
 
